@@ -1072,27 +1072,6 @@ class FlashcardApp {
     }
 
     // Test Mode Methods
-    updateTestInterface() {
-        const noCardsMsg = document.getElementById('no-test-cards-message');
-        const testInterface = document.getElementById('test-interface');
-
-        if (this.flashcards.length === 0) {
-            noCardsMsg.style.display = 'block';
-            testInterface.style.display = 'none';
-            return;
-        }
-
-        noCardsMsg.style.display = 'none';
-        testInterface.style.display = 'block';
-
-        if (this.testQueue.length === 0) {
-            this.initializeTestQueue();
-        }
-
-        this.displayTestQuestion();
-        this.updateTestStats();
-    }
-
     initializeTestQueue() {
         this.testQueue = this.flashcards.map((card, index) => index);
         this.shuffleArray(this.testQueue);
