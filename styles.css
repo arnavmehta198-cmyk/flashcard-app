@@ -329,7 +329,6 @@ textarea::placeholder, .input-field::placeholder {
     height: 380px;
     cursor: pointer;
     position: relative;
-    transition: opacity 0.3s ease;
 }
 
 .flashcard-inner {
@@ -392,6 +391,36 @@ textarea::placeholder, .input-field::placeholder {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
+}
+
+@keyframes slideOutLeft {
+    0% {
+        opacity: 1;
+        transform: translateX(0) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-100%) rotate(-10deg);
+    }
+}
+
+@keyframes slideInRight {
+    0% {
+        opacity: 0;
+        transform: translateX(100%) rotate(10deg) scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) rotate(0deg) scale(1);
+    }
+}
+
+.flashcard.slide-out {
+    animation: slideOutLeft 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.flashcard.slide-in {
+    animation: slideInRight 0.5s cubic-bezier(0, 0, 0.2, 1) forwards;
 }
 
 .card-label {

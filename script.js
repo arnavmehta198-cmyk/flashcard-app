@@ -497,18 +497,15 @@ class FlashcardApp {
     handleAnswer(isCorrect) {
         if (this.studyQueue.length === 0) return;
 
-        // Immediately unflip and hide the card to prevent seeing next answer
+        // Slide out the current card
         const flashcard = document.getElementById('flashcard');
         flashcard.classList.remove('flipped');
-        flashcard.style.opacity = '0';
+        flashcard.classList.add('slide-out');
 
         const cardIndex = this.studyQueue.shift();
         const card = this.flashcards[cardIndex];
 
         card.lastStudied = new Date().toISOString();
-
-        // Show visual feedback
-        this.showAnswerFeedback(isCorrect);
 
         if (isCorrect) {
             card.correctCount++;
@@ -538,19 +535,23 @@ class FlashcardApp {
 
         this.saveToStorage();
 
-        // Delay before showing next card for better UX
+        // Wait for slide-out animation to complete, then show next card
         setTimeout(() => {
+            flashcard.classList.remove('slide-out');
+            
             if (this.studyQueue.length === 0) {
                 this.showStudyComplete();
-                flashcard.style.opacity = '1';
             } else {
                 this.updateStudyInterface();
-                // Fade the card back in after content is updated
+                // Trigger slide-in animation
+                flashcard.classList.add('slide-in');
+                
+                // Remove slide-in class after animation completes
                 setTimeout(() => {
-                    flashcard.style.opacity = '1';
-                }, 50);
+                    flashcard.classList.remove('slide-in');
+                }, 500);
             }
-        }, 600);
+        }, 400);
     }
 
     showAnswerFeedback(isCorrect) {
@@ -679,15 +680,12 @@ class FlashcardApp {
     handleReviewAnswer(isCorrect) {
         if (this.reviewQueue.length === 0) return;
 
-        // Immediately unflip and hide the card to prevent seeing next answer
+        // Slide out the current card
         const flashcard = document.getElementById('review-flashcard');
         flashcard.classList.remove('flipped');
-        flashcard.style.opacity = '0';
+        flashcard.classList.add('slide-out');
 
         const cardIndex = this.reviewQueue.shift();
-
-        // Show visual feedback
-        this.showReviewFeedback(isCorrect);
 
         if (isCorrect) {
             // Remove from mistakes
@@ -699,19 +697,23 @@ class FlashcardApp {
 
         this.saveToStorage();
 
-        // Delay before showing next card
+        // Wait for slide-out animation to complete, then show next card
         setTimeout(() => {
+            flashcard.classList.remove('slide-out');
+            
             if (this.reviewQueue.length === 0) {
                 this.showReviewComplete();
-                flashcard.style.opacity = '1';
             } else {
                 this.displayCurrentReviewCard();
-                // Fade the card back in after content is updated
+                // Trigger slide-in animation
+                flashcard.classList.add('slide-in');
+                
+                // Remove slide-in class after animation completes
                 setTimeout(() => {
-                    flashcard.style.opacity = '1';
-                }, 50);
+                    flashcard.classList.remove('slide-in');
+                }, 500);
             }
-        }, 600);
+        }, 400);
     }
 
     showReviewFeedback(isCorrect) {
