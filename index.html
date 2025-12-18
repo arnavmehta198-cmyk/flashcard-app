@@ -38,7 +38,9 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="create">Create</button>
             <button class="tab-btn" data-tab="study">Study</button>
+            <button class="tab-btn" data-tab="test">Test</button>
             <button class="tab-btn" data-tab="review">Review</button>
+            <button class="tab-btn" data-tab="stats">Stats</button>
             <button class="tab-btn" data-tab="library">Library</button>
         </div>
 
@@ -50,6 +52,8 @@
                     <button class="method-btn active" data-method="text">Text Input</button>
                     <button class="method-btn" data-method="url">Import URL</button>
                     <button class="method-btn" data-method="image">Add Image</button>
+                    <button class="method-btn" data-method="csv">Import CSV</button>
+                    <button class="method-btn" data-method="ai">AI Generate</button>
                 </div>
 
                 <!-- Text Input Method -->
@@ -91,6 +95,29 @@
                         <textarea id="answer-input" placeholder="Enter answer" class="input-field"></textarea>
                         <button id="save-card-btn" class="btn btn-primary">Save Card</button>
                     </div>
+                </div>
+
+                <!-- CSV Import Method -->
+                <div id="csv-input-method" class="input-method">
+                    <div class="info-box">
+                        <p><strong>Import CSV</strong> - Upload a CSV file with your flashcards</p>
+                        <p class="example-text">Format: Question,Answer (one card per row)</p>
+                    </div>
+                    <input type="file" id="csv-upload" accept=".csv" style="display: none;">
+                    <button id="csv-upload-btn" class="btn btn-secondary">Choose CSV File</button>
+                    <div id="csv-preview" style="margin-top: 1rem;"></div>
+                    <button id="export-csv-btn" class="btn btn-primary" style="margin-top: 1rem;">Export to CSV</button>
+                </div>
+
+                <!-- AI Generate Method -->
+                <div id="ai-input-method" class="input-method">
+                    <div class="info-box">
+                        <p><strong>AI Generate</strong> - Create flashcards from your notes or study material</p>
+                        <p class="example-text">Paste your study material and AI will generate Q&A pairs</p>
+                    </div>
+                    <textarea id="ai-input" placeholder="Paste your study notes, article, or any text here..." style="min-height: 200px;"></textarea>
+                    <button id="ai-generate-btn" class="btn btn-primary">Generate Flashcards</button>
+                    <div id="ai-preview" style="margin-top: 1rem;"></div>
                 </div>
 
                 <div id="creation-feedback" class="feedback"></div>
@@ -160,6 +187,44 @@
             </div>
         </div>
 
+        <!-- Test Mode Section -->
+        <div id="test-section" class="section">
+            <div class="card-container">
+                <div id="no-test-cards-message" class="empty-state">
+                    <h2>No Cards Yet</h2>
+                    <p>Create some flashcards to start testing</p>
+                </div>
+                <div id="test-interface" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="test-progress-fill"></div>
+                        <span class="progress-text" id="test-progress-text">0 / 0</span>
+                    </div>
+                    
+                    <div class="test-card">
+                        <div class="test-question" id="test-question">Question will appear here</div>
+                        <div class="test-options" id="test-options">
+                            <!-- Options will be generated here -->
+                        </div>
+                    </div>
+
+                    <div class="test-stats">
+                        <div class="stat">
+                            <span class="stat-label">Correct</span>
+                            <span class="stat-value correct-value" id="test-correct-count">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Wrong</span>
+                            <span class="stat-value wrong-value" id="test-wrong-count">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Accuracy</span>
+                            <span class="stat-value" id="test-accuracy">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Review Mistakes Section -->
         <div id="review-section" class="section">
             <div class="card-container">
@@ -201,6 +266,55 @@
                     <div class="keyboard-shortcuts">
                         <span>Press <kbd>Space</kbd> to flip card</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div id="stats-section" class="section">
+            <div class="card-container">
+                <h2>Progress Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon">📚</div>
+                        <div class="stat-card-value" id="total-cards-stat">0</div>
+                        <div class="stat-card-label">Total Cards</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">✅</div>
+                        <div class="stat-card-value" id="mastered-cards-stat">0</div>
+                        <div class="stat-card-label">Mastered</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">📖</div>
+                        <div class="stat-card-value" id="total-reviews-stat">0</div>
+                        <div class="stat-card-label">Total Reviews</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">🎯</div>
+                        <div class="stat-card-value" id="accuracy-stat">0%</div>
+                        <div class="stat-card-label">Overall Accuracy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">🔥</div>
+                        <div class="stat-card-value" id="best-streak-stat">0</div>
+                        <div class="stat-card-label">Best Streak</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">📅</div>
+                        <div class="stat-card-value" id="study-days-stat">0</div>
+                        <div class="stat-card-label">Study Days</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Performance Over Time</h3>
+                    <canvas id="performance-chart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Card Difficulty Distribution</h3>
+                    <div id="difficulty-chart" class="difficulty-bars"></div>
                 </div>
             </div>
         </div>

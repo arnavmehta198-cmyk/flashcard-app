@@ -13,6 +13,13 @@ class FlashcardApp {
             wrong: 0
         };
         this.currentImage = null;
+        this.testQueue = [];
+        this.testStats = {
+            correct: 0,
+            wrong: 0
+        };
+        this.currentTestIndex = 0;
+        this.performanceHistory = [];
         
         this.init();
     }
@@ -108,6 +115,16 @@ class FlashcardApp {
         document.getElementById('image-upload').addEventListener('change', (e) => this.handleImageUpload(e));
         document.getElementById('save-card-btn').addEventListener('click', () => this.saveImageCard());
 
+        // CSV Import/Export
+        document.getElementById('csv-upload-btn').addEventListener('click', () => {
+            document.getElementById('csv-upload').click();
+        });
+        document.getElementById('csv-upload').addEventListener('change', (e) => this.handleCSVUpload(e));
+        document.getElementById('export-csv-btn').addEventListener('click', () => this.exportToCSV());
+
+        // AI Generate
+        document.getElementById('ai-generate-btn').addEventListener('click', () => this.generateWithAI());
+
         // Study Controls
         const flashcard = document.getElementById('flashcard');
         if (flashcard) {
@@ -196,8 +213,12 @@ class FlashcardApp {
         // Refresh interfaces when switching tabs
         if (tabName === 'study') {
             this.updateStudyInterface();
+        } else if (tabName === 'test') {
+            this.updateTestInterface();
         } else if (tabName === 'review') {
             this.updateReviewInterface();
+        } else if (tabName === 'stats') {
+            this.updateStatsInterface();
         } else if (tabName === 'library') {
             this.renderLibrary();
         }
@@ -220,8 +241,12 @@ class FlashcardApp {
             document.getElementById('text-input-method').classList.add('active');
         } else if (method === 'url') {
             document.getElementById('url-input-method').classList.add('active');
-        } else {
+        } else if (method === 'image') {
             document.getElementById('image-input-method').classList.add('active');
+        } else if (method === 'csv') {
+            document.getElementById('csv-input-method').classList.add('active');
+        } else if (method === 'ai') {
+            document.getElementById('ai-input-method').classList.add('active');
         }
     }
 
@@ -398,7 +423,10 @@ class FlashcardApp {
             type: 'image',
             correctCount: 0,
             wrongCount: 0,
-            lastStudied: null
+            lastStudied: null,
+            nextReview: Date.now(),
+            easeFactor: 2.5,
+            interval: 0
         });
 
         this.saveToStorage();
@@ -841,6 +869,421 @@ class FlashcardApp {
         setTimeout(() => {
             element.style.display = 'none';
         }, 5000);
+    }
+
+    // CSV Import/Export Methods
+    handleCSVUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const csv = e.target.result;
+            this.parseCSV(csv);
+        };
+        reader.readAsText(file);
+    }
+
+    parseCSV(csv) {
+        const lines = csv.split('\n').filter(line => line.trim());
+        let createdCount = 0;
+        const feedback = document.getElementById('creation-feedback');
+
+        lines.forEach((line, index) => {
+            // Skip header row if it exists
+            if (index === 0 && (line.toLowerCase().includes('question') || line.toLowerCase().includes('front'))) {
+                return;
+            }
+
+            const parts = line.split(',').map(part => part.trim().replace(/^"|"$/g, ''));
+            if (parts.length >= 2 && parts[0] && parts[1]) {
+                this.flashcards.push({
+                    id: Date.now() + Math.random(),
+                    question: parts[0],
+                    answer: parts[1],
+                    type: 'text',
+                    correctCount: 0,
+                    wrongCount: 0,
+                    lastStudied: null,
+                    nextReview: Date.now(),
+                    easeFactor: 2.5,
+                    interval: 0
+                });
+                createdCount++;
+            }
+        });
+
+        this.saveToStorage();
+        this.initializeStudyQueue();
+        this.renderLibrary();
+        this.updateStudyInterface();
+
+        this.showFeedback(feedback, `Successfully imported ${createdCount} cards from CSV`, 'success');
+        document.getElementById('csv-upload').value = '';
+    }
+
+    exportToCSV() {
+        if (this.flashcards.length === 0) {
+            const feedback = document.getElementById('creation-feedback');
+            this.showFeedback(feedback, 'No cards to export', 'error');
+            return;
+        }
+
+        let csv = 'Question,Answer,Correct Count,Wrong Count,Last Studied\n';
+        this.flashcards.forEach(card => {
+            const question = `"${card.question.replace(/"/g, '""')}"`;
+            const answer = `"${card.answer.replace(/"/g, '""')}"`;
+            const lastStudied = card.lastStudied ? new Date(card.lastStudied).toLocaleDateString() : 'Never';
+            csv += `${question},${answer},${card.correctCount},${card.wrongCount},${lastStudied}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `flashcards-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        const feedback = document.getElementById('creation-feedback');
+        this.showFeedback(feedback, `Exported ${this.flashcards.length} cards to CSV`, 'success');
+    }
+
+    // AI Generation Methods
+    generateWithAI() {
+        const input = document.getElementById('ai-input').value.trim();
+        const feedback = document.getElementById('creation-feedback');
+
+        if (!input) {
+            this.showFeedback(feedback, 'Please enter some text to generate flashcards from', 'error');
+            return;
+        }
+
+        // Simple AI simulation - extract key sentences and create Q&A pairs
+        this.showFeedback(feedback, 'Generating flashcards...', 'success');
+
+        setTimeout(() => {
+            const sentences = input.split(/[.!?]+/).filter(s => s.trim().length > 20);
+            let createdCount = 0;
+
+            sentences.forEach(sentence => {
+                const words = sentence.trim().split(' ');
+                if (words.length > 5) {
+                    // Create a simple Q&A by hiding key nouns
+                    const keyWord = words.find(w => w.length > 5 && /^[A-Z]/.test(w)) || words[Math.floor(words.length / 2)];
+                    const question = `What is ${keyWord.toLowerCase()}?`;
+                    const answer = sentence.trim();
+
+                    this.flashcards.push({
+                        id: Date.now() + Math.random(),
+                        question: question,
+                        answer: answer,
+                        type: 'text',
+                        correctCount: 0,
+                        wrongCount: 0,
+                        lastStudied: null,
+                        nextReview: Date.now(),
+                        easeFactor: 2.5,
+                        interval: 0
+                    });
+                    createdCount++;
+                }
+            });
+
+            this.saveToStorage();
+            this.initializeStudyQueue();
+            this.renderLibrary();
+            this.updateStudyInterface();
+
+            this.showFeedback(feedback, `Generated ${createdCount} flashcards with AI`, 'success');
+            document.getElementById('ai-input').value = '';
+        }, 1000);
+    }
+
+    // Test Mode Methods
+    updateTestInterface() {
+        const noCardsMsg = document.getElementById('no-test-cards-message');
+        const testInterface = document.getElementById('test-interface');
+
+        if (this.flashcards.length === 0) {
+            noCardsMsg.style.display = 'block';
+            testInterface.style.display = 'none';
+            return;
+        }
+
+        noCardsMsg.style.display = 'none';
+        testInterface.style.display = 'block';
+
+        if (this.testQueue.length === 0) {
+            this.initializeTestQueue();
+        }
+
+        this.displayTestQuestion();
+        this.updateTestStats();
+    }
+
+    initializeTestQueue() {
+        this.testQueue = this.flashcards.map((card, index) => index);
+        this.shuffleArray(this.testQueue);
+        this.currentTestIndex = 0;
+        this.testStats = { correct: 0, wrong: 0 };
+    }
+
+    displayTestQuestion() {
+        if (this.testQueue.length === 0) {
+            this.showTestComplete();
+            return;
+        }
+
+        const cardIndex = this.testQueue[0];
+        const card = this.flashcards[cardIndex];
+        
+        document.getElementById('test-question').textContent = card.question;
+
+        // Generate multiple choice options
+        const options = this.generateTestOptions(card.answer, cardIndex);
+        const optionsContainer = document.getElementById('test-options');
+        optionsContainer.innerHTML = '';
+
+        options.forEach((option, index) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'test-option';
+            optionDiv.textContent = option.text;
+            optionDiv.addEventListener('click', () => this.handleTestAnswer(option.isCorrect, optionDiv, optionsContainer));
+            optionsContainer.appendChild(optionDiv);
+        });
+
+        // Update progress
+        const completed = this.flashcards.length - this.testQueue.length;
+        const total = this.flashcards.length;
+        const progress = (completed / total) * 100;
+
+        document.getElementById('test-progress-fill').style.width = `${progress}%`;
+        document.getElementById('test-progress-text').textContent = `${completed} / ${total}`;
+    }
+
+    generateTestOptions(correctAnswer, correctIndex) {
+        const options = [{ text: correctAnswer, isCorrect: true }];
+        
+        // Get 3 random wrong answers from other cards
+        const wrongAnswers = this.flashcards
+            .map((card, index) => ({ answer: card.answer, index }))
+            .filter((item, index) => index !== correctIndex)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3)
+            .map(item => ({ text: item.answer, isCorrect: false }));
+
+        options.push(...wrongAnswers);
+        
+        // Shuffle options
+        return this.shuffleArray(options);
+    }
+
+    handleTestAnswer(isCorrect, selectedOption, optionsContainer) {
+        // Disable all options
+        const allOptions = optionsContainer.querySelectorAll('.test-option');
+        allOptions.forEach(opt => opt.classList.add('disabled'));
+
+        // Mark selected option
+        if (isCorrect) {
+            selectedOption.classList.add('correct');
+            this.testStats.correct++;
+        } else {
+            selectedOption.classList.add('wrong');
+            this.testStats.wrong++;
+            // Show correct answer
+            allOptions.forEach(opt => {
+                if (opt.textContent === this.flashcards[this.testQueue[0]].answer) {
+                    opt.classList.add('correct');
+                }
+            });
+        }
+
+        this.testQueue.shift();
+
+        // Wait before showing next question
+        setTimeout(() => {
+            if (this.testQueue.length === 0) {
+                this.showTestComplete();
+            } else {
+                this.displayTestQuestion();
+            }
+            this.updateTestStats();
+        }, 1500);
+    }
+
+    updateTestStats() {
+        document.getElementById('test-correct-count').textContent = this.testStats.correct;
+        document.getElementById('test-wrong-count').textContent = this.testStats.wrong;
+        
+        const total = this.testStats.correct + this.testStats.wrong;
+        const accuracy = total > 0 ? Math.round((this.testStats.correct / total) * 100) : 0;
+        document.getElementById('test-accuracy').textContent = accuracy + '%';
+    }
+
+    showTestComplete() {
+        const total = this.testStats.correct + this.testStats.wrong;
+        const accuracy = total > 0 ? Math.round((this.testStats.correct / total) * 100) : 0;
+        
+        document.getElementById('test-question').innerHTML = `
+            <div style="text-align: center;">
+                <h3 style="font-size: 1.8rem; margin-bottom: 1rem; font-weight: 600;">Test Complete!</h3>
+                <p style="margin-top: 1rem; font-size: 1.3rem; color: var(--accent-primary); font-weight: 600;">${accuracy}% Accuracy</p>
+                <p style="margin-top: 0.75rem; font-size: 1.1rem; color: var(--text-secondary);">Score: ${this.testStats.correct} / ${total}</p>
+            </div>
+        `;
+        document.getElementById('test-options').innerHTML = '';
+    }
+
+    // Stats Dashboard Methods
+    updateStatsInterface() {
+        this.updateStatCards();
+        this.updatePerformanceChart();
+        this.updateDifficultyChart();
+    }
+
+    updateStatCards() {
+        // Total cards
+        document.getElementById('total-cards-stat').textContent = this.flashcards.length;
+
+        // Mastered cards (>= 3 correct, 0 wrong)
+        const mastered = this.flashcards.filter(c => c.correctCount >= 3 && c.wrongCount === 0).length;
+        document.getElementById('mastered-cards-stat').textContent = mastered;
+
+        // Total reviews
+        const totalReviews = this.flashcards.reduce((sum, c) => sum + c.correctCount + c.wrongCount, 0);
+        document.getElementById('total-reviews-stat').textContent = totalReviews;
+
+        // Overall accuracy
+        const totalCorrect = this.flashcards.reduce((sum, c) => sum + c.correctCount, 0);
+        const totalWrong = this.flashcards.reduce((sum, c) => sum + c.wrongCount, 0);
+        const accuracy = totalCorrect + totalWrong > 0 ? Math.round((totalCorrect / (totalCorrect + totalWrong)) * 100) : 0;
+        document.getElementById('accuracy-stat').textContent = accuracy + '%';
+
+        // Best streak
+        const bestStreak = localStorage.getItem('bestStreak') || 0;
+        document.getElementById('best-streak-stat').textContent = bestStreak;
+
+        // Study days (simplified - count unique dates from lastStudied)
+        const studyDates = new Set(
+            this.flashcards
+                .filter(c => c.lastStudied)
+                .map(c => new Date(c.lastStudied).toDateString())
+        );
+        document.getElementById('study-days-stat').textContent = studyDates.size;
+    }
+
+    updatePerformanceChart() {
+        const canvas = document.getElementById('performance-chart');
+        const ctx = canvas.getContext('2d');
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Simple bar chart of correct vs wrong
+        const totalCorrect = this.flashcards.reduce((sum, c) => sum + c.correctCount, 0);
+        const totalWrong = this.flashcards.reduce((sum, c) => sum + c.wrongCount, 0);
+        
+        const maxValue = Math.max(totalCorrect, totalWrong, 1);
+        const barWidth = 100;
+        const spacing = 80;
+        
+        // Draw correct bar
+        ctx.fillStyle = '#22c55e';
+        const correctHeight = (totalCorrect / maxValue) * 150;
+        ctx.fillRect(80, 160 - correctHeight, barWidth, correctHeight);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '14px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('Correct', 130, 185);
+        ctx.fillText(totalCorrect, 130, 200);
+        
+        // Draw wrong bar
+        ctx.fillStyle = '#ef4444';
+        const wrongHeight = (totalWrong / maxValue) * 150;
+        ctx.fillRect(80 + barWidth + spacing, 160 - wrongHeight, barWidth, wrongHeight);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText('Wrong', 230, 185);
+        ctx.fillText(totalWrong, 230, 200);
+    }
+
+    updateDifficultyChart() {
+        const container = document.getElementById('difficulty-chart');
+        container.innerHTML = '';
+
+        // Categorize cards by difficulty
+        const easy = this.flashcards.filter(c => c.correctCount >= 3 && c.wrongCount === 0).length;
+        const medium = this.flashcards.filter(c => {
+            const total = c.correctCount + c.wrongCount;
+            const accuracy = total > 0 ? c.correctCount / total : 0;
+            return accuracy >= 0.5 && accuracy < 1 && c.wrongCount > 0;
+        }).length;
+        const hard = this.flashcards.filter(c => {
+            const total = c.correctCount + c.wrongCount;
+            const accuracy = total > 0 ? c.correctCount / total : 0;
+            return accuracy < 0.5 || (total === 0 && c.wrongCount > 0);
+        }).length;
+        const notStudied = this.flashcards.filter(c => c.correctCount === 0 && c.wrongCount === 0).length;
+
+        const total = this.flashcards.length || 1;
+
+        const difficulties = [
+            { label: 'Easy (Mastered)', value: easy, color: '#22c55e' },
+            { label: 'Medium', value: medium, color: '#f59e0b' },
+            { label: 'Hard', value: hard, color: '#ef4444' },
+            { label: 'Not Studied', value: notStudied, color: '#64748b' }
+        ];
+
+        difficulties.forEach(diff => {
+            const item = document.createElement('div');
+            item.className = 'difficulty-bar-item';
+            
+            const label = document.createElement('div');
+            label.className = 'difficulty-label';
+            label.textContent = diff.label;
+            
+            const barBg = document.createElement('div');
+            barBg.className = 'difficulty-bar-bg';
+            
+            const barFill = document.createElement('div');
+            barFill.className = 'difficulty-bar-fill';
+            barFill.style.width = `${(diff.value / total) * 100}%`;
+            barFill.style.background = diff.color;
+            
+            const barValue = document.createElement('span');
+            barValue.className = 'difficulty-bar-value';
+            barValue.textContent = diff.value;
+            
+            barFill.appendChild(barValue);
+            barBg.appendChild(barFill);
+            item.appendChild(label);
+            item.appendChild(barBg);
+            container.appendChild(item);
+        });
+    }
+
+    // Spaced Repetition Algorithm (SM-2)
+    updateSpacedRepetition(card, quality) {
+        // quality: 0-5 (0=total blackout, 5=perfect)
+        if (quality >= 3) {
+            if (card.interval === 0) {
+                card.interval = 1;
+            } else if (card.interval === 1) {
+                card.interval = 6;
+            } else {
+                card.interval = Math.round(card.interval * card.easeFactor);
+            }
+        } else {
+            card.interval = 0;
+        }
+
+        card.easeFactor = card.easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+        
+        if (card.easeFactor < 1.3) {
+            card.easeFactor = 1.3;
+        }
+
+        card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
     }
 }
 
