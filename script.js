@@ -497,9 +497,10 @@ class FlashcardApp {
     handleAnswer(isCorrect) {
         if (this.studyQueue.length === 0) return;
 
-        // Immediately unflip the card to prevent seeing next answer
+        // Immediately unflip and hide the card to prevent seeing next answer
         const flashcard = document.getElementById('flashcard');
         flashcard.classList.remove('flipped');
+        flashcard.style.opacity = '0';
 
         const cardIndex = this.studyQueue.shift();
         const card = this.flashcards[cardIndex];
@@ -541,8 +542,13 @@ class FlashcardApp {
         setTimeout(() => {
             if (this.studyQueue.length === 0) {
                 this.showStudyComplete();
+                flashcard.style.opacity = '1';
             } else {
                 this.updateStudyInterface();
+                // Fade the card back in after content is updated
+                setTimeout(() => {
+                    flashcard.style.opacity = '1';
+                }, 50);
             }
         }, 600);
     }
@@ -673,9 +679,10 @@ class FlashcardApp {
     handleReviewAnswer(isCorrect) {
         if (this.reviewQueue.length === 0) return;
 
-        // Immediately unflip the card to prevent seeing next answer
+        // Immediately unflip and hide the card to prevent seeing next answer
         const flashcard = document.getElementById('review-flashcard');
         flashcard.classList.remove('flipped');
+        flashcard.style.opacity = '0';
 
         const cardIndex = this.reviewQueue.shift();
 
@@ -696,8 +703,13 @@ class FlashcardApp {
         setTimeout(() => {
             if (this.reviewQueue.length === 0) {
                 this.showReviewComplete();
+                flashcard.style.opacity = '1';
             } else {
                 this.displayCurrentReviewCard();
+                // Fade the card back in after content is updated
+                setTimeout(() => {
+                    flashcard.style.opacity = '1';
+                }, 50);
             }
         }, 600);
     }

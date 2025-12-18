@@ -329,6 +329,7 @@ textarea::placeholder, .input-field::placeholder {
     height: 380px;
     cursor: pointer;
     position: relative;
+    transition: opacity 0.3s ease;
 }
 
 .flashcard-inner {
