@@ -497,6 +497,10 @@ class FlashcardApp {
     handleAnswer(isCorrect) {
         if (this.studyQueue.length === 0) return;
 
+        // Immediately unflip the card to prevent seeing next answer
+        const flashcard = document.getElementById('flashcard');
+        flashcard.classList.remove('flipped');
+
         const cardIndex = this.studyQueue.shift();
         const card = this.flashcards[cardIndex];
 
@@ -668,6 +672,10 @@ class FlashcardApp {
 
     handleReviewAnswer(isCorrect) {
         if (this.reviewQueue.length === 0) return;
+
+        // Immediately unflip the card to prevent seeing next answer
+        const flashcard = document.getElementById('review-flashcard');
+        flashcard.classList.remove('flipped');
 
         const cardIndex = this.reviewQueue.shift();
 
