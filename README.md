@@ -2,6 +2,8 @@
 
 A modern, intelligent flashcard application designed for effective studying and retention.
 
+🌐 **Live Demo:** [https://arnavmehta198-cmyk.github.io/flashcard-app/](https://arnavmehta198-cmyk.github.io/flashcard-app/)
+
 ## Features
 
 ### Card Creation
