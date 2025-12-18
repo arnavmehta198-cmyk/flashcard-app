@@ -4,6 +4,21 @@
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+/* Smooth scrolling for all devices */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Better scrolling on iOS */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
 :root {
     --bg-main: #0a0e27;
     --bg-secondary: #151b38;
@@ -30,6 +45,10 @@ body {
     background-image: 
         radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
         radial-gradient(at 100% 100%, rgba(0, 212, 255, 0.1) 0px, transparent 50%);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .container {
@@ -230,6 +249,9 @@ textarea::placeholder, .input-field::placeholder {
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
 }
 
 .btn-primary {
@@ -329,6 +351,8 @@ textarea::placeholder, .input-field::placeholder {
     height: 380px;
     cursor: pointer;
     position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .flashcard-inner {
@@ -761,7 +785,25 @@ textarea::placeholder, .input-field::placeholder {
     }
 }
 
-/* Responsive Design */
+/* Responsive Design - Mobile First */
+
+/* Tablet and smaller laptops */
+@media (max-width: 1024px) {
+    .container {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .matching-container {
+        gap: 1rem;
+    }
+}
+
+/* Tablets */
 @media (max-width: 768px) {
     body {
         padding: 1.5rem 1rem;
@@ -771,34 +813,64 @@ textarea::placeholder, .input-field::placeholder {
         font-size: 2rem;
     }
 
+    .subtitle {
+        font-size: 0.95rem;
+    }
+
     .card-container {
-        padding: 1.75rem;
+        padding: 1.5rem;
+        border-radius: 12px;
     }
 
     .tabs {
         gap: 0.4rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.5rem;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
     }
 
     .tab-btn {
         padding: 0.65rem 1rem;
         font-size: 0.85rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .input-methods {
+        gap: 0.5rem;
+    }
+
+    .method-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
     }
 
     .flashcard {
-        height: 320px;
+        height: 300px;
+        margin: 1.5rem auto;
+    }
+
+    .flashcard-front, .flashcard-back {
+        padding: 2rem 1.5rem;
     }
 
     .card-content {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .answer-buttons {
-        flex-direction: column;
+        flex-direction: row;
         gap: 0.75rem;
     }
 
     .study-stats {
-        flex-direction: column;
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
 
@@ -808,6 +880,506 @@ textarea::placeholder, .input-field::placeholder {
 
     .library-list {
         grid-template-columns: 1fr;
+    }
+
+    .test-card {
+        padding: 1.5rem;
+    }
+
+    .test-question {
+        font-size: 1.2rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .matching-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .deck-organization {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #filter-deck {
+        width: 100%;
+    }
+}
+
+/* Mobile Phones - iPhone and Android */
+@media (max-width: 480px) {
+    body {
+        padding: 1rem 0.75rem;
+        font-size: 14px;
+    }
+
+    header {
+        margin-bottom: 2rem;
+    }
+
+    header h1 {
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .card-container {
+        padding: 1.25rem;
+        border-radius: 12px;
+    }
+
+    .card-container h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Navigation Tabs - Scrollable */
+    .tabs {
+        gap: 0.35rem;
+        margin-bottom: 1.5rem;
+        justify-content: flex-start;
+    }
+
+    .tab-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+
+    /* Input Methods */
+    .input-methods {
+        gap: 0.4rem;
+    }
+
+    .method-btn {
+        padding: 0.55rem 0.9rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+
+    /* Forms */
+    textarea, .input-field {
+        padding: 0.85rem;
+        font-size: 0.9rem;
+        min-height: 120px;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        width: 100%;
+    }
+
+    .btn-secondary, .btn-primary, .btn-danger {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Flashcard - Optimized for phone screens */
+    .flashcard {
+        height: 280px;
+        max-width: 100%;
+        margin: 1rem auto;
+    }
+
+    .flashcard-front, .flashcard-back {
+        padding: 2rem 1.25rem;
+        border-radius: 10px;
+    }
+
+    .card-label {
+        font-size: 0.65rem;
+        margin-bottom: 1rem;
+    }
+
+    .card-content {
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+
+    .flip-hint {
+        font-size: 0.75rem;
+        bottom: 1rem;
+    }
+
+    /* Answer Buttons - Stack on small phones */
+    .answer-buttons {
+        flex-direction: column;
+        gap: 0.65rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-correct, .btn-wrong {
+        font-size: 0.95rem;
+        padding: 0.9rem 1.5rem;
+    }
+
+    .keyboard-hint {
+        font-size: 0.7rem;
+    }
+
+    /* Stats - 2 Column Grid */
+    .study-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .stat {
+        padding: 0.85rem 1rem;
+        min-width: auto;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+        height: 6px;
+        margin-bottom: 1.5rem;
+    }
+
+    .progress-text {
+        font-size: 0.8rem;
+        top: -1.5rem;
+    }
+
+    /* Test Mode */
+    .test-mode-selector {
+        gap: 0.5rem;
+    }
+
+    .test-mode-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        flex: 1;
+    }
+
+    .test-card {
+        padding: 1.25rem;
+    }
+
+    .test-question {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .test-option {
+        padding: 1rem 1.25rem;
+        font-size: 0.95rem;
+    }
+
+    .test-stats {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    /* Writing Mode */
+    #writing-answer-input {
+        font-size: 0.95rem;
+        min-height: 100px;
+    }
+
+    #writing-feedback {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    /* Stats Dashboard */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    .stat-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .stat-card-icon {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat-card-value {
+        font-size: 2rem;
+    }
+
+    .stat-card-label {
+        font-size: 0.8rem;
+    }
+
+    .chart-container {
+        padding: 1.25rem;
+    }
+
+    .chart-container h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Library */
+    .library-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .library-controls button {
+        width: 100%;
+    }
+
+    .library-card {
+        padding: 1.25rem;
+    }
+
+    .library-card-question {
+        font-size: 1rem;
+    }
+
+    .library-card-answer {
+        font-size: 0.85rem;
+    }
+
+    .library-card-stats {
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    /* Matching Game */
+    .matching-container {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .matching-item {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    /* Audio Controls */
+    .audio-controls {
+        padding: 0.85rem;
+    }
+
+    .audio-player-controls {
+        margin-bottom: 0.75rem;
+    }
+
+    #playback-speed {
+        padding: 0.4rem;
+        font-size: 0.85rem;
+    }
+
+    /* Deck Organization */
+    .deck-organization {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .deck-organization label {
+        font-size: 0.85rem;
+    }
+
+    #filter-deck {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    .deck-selector select {
+        font-size: 0.9rem;
+    }
+
+    /* Share Modal - Mobile Optimized */
+    .share-modal-content {
+        padding: 1.5rem;
+        max-width: 90%;
+        margin: 0 1rem;
+    }
+
+    .share-modal-content h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .share-link-box {
+        padding: 0.85rem;
+        font-size: 0.75rem;
+        word-break: break-all;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-buttons button {
+        width: 100%;
+    }
+
+    /* Info Box */
+    .info-box {
+        padding: 0.85rem 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-box p {
+        font-size: 0.85rem;
+    }
+
+    /* Feedback Messages */
+    .feedback {
+        padding: 0.85rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 3rem 1.5rem;
+    }
+
+    .empty-state h2 {
+        font-size: 1.3rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 1.5rem 1rem;
+        margin-top: 2rem;
+        font-size: 0.85rem;
+    }
+
+    /* Confetti - Smaller on mobile */
+    .confetti {
+        width: 8px;
+        height: 8px;
+    }
+
+    /* Difficulty Chart */
+    .difficulty-label {
+        min-width: 70px;
+        font-size: 0.8rem;
+    }
+
+    .difficulty-bar-bg {
+        height: 25px;
+    }
+
+    .difficulty-bar-value {
+        font-size: 0.75rem;
+    }
+}
+
+/* Extra Small Phones - iPhone SE, older Androids */
+@media (max-width: 375px) {
+    body {
+        padding: 0.75rem 0.5rem;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    .card-container {
+        padding: 1rem;
+    }
+
+    .flashcard {
+        height: 260px;
+    }
+
+    .card-content {
+        font-size: 0.95rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.85rem;
+    }
+
+    .test-question {
+        font-size: 1rem;
+    }
+
+    .test-option {
+        padding: 0.85rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .stat-card-value {
+        font-size: 1.75rem;
+    }
+}
+
+/* Landscape Mode on Phones */
+@media (max-width: 812px) and (orientation: landscape) {
+    .flashcard {
+        height: 220px;
+        max-width: 500px;
+    }
+
+    .answer-buttons {
+        flex-direction: row;
+    }
+
+    .study-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    .tab-btn, .method-btn, .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .test-option {
+        min-height: 60px;
+    }
+
+    .matching-item {
+        min-height: 55px;
+    }
+
+    /* Disable hover effects on touch devices */
+    .flashcard:hover .flashcard-inner {
+        transform: none;
+    }
+
+    .tab-btn:hover,
+    .method-btn:hover,
+    .test-option:hover {
+        transform: none;
+    }
+
+    /* Better tap feedback */
+    .btn:active,
+    .tab-btn:active,
+    .method-btn:active {
+        transform: scale(0.98);
+        opacity: 0.9;
     }
 }
 
