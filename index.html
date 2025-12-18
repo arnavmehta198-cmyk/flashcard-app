@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Flashcards</h1>
+            <p class="subtitle">Smart study tool for better retention</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="create">Create</button>
+            <button class="tab-btn" data-tab="study">Study</button>
+            <button class="tab-btn" data-tab="review">Review</button>
+            <button class="tab-btn" data-tab="library">Library</button>
+        </div>
+
+        <!-- Create Cards Section -->
+        <div id="create-section" class="section active">
+            <div class="card-container">
+                <h2>Create New Cards</h2>
+                <div class="input-methods">
+                    <button class="method-btn active" data-method="text">Text Input</button>
+                    <button class="method-btn" data-method="url">Import URL</button>
+                    <button class="method-btn" data-method="image">Add Image</button>
+                </div>
+
+                <!-- Text Input Method -->
+                <div id="text-input-method" class="input-method active">
+                    <div class="info-box">
+                        <p><strong>Format:</strong> Question | Answer (one per line)</p>
+                        <p class="example-text">Example: What is photosynthesis? | Process where plants convert light to energy</p>
+                    </div>
+                    <textarea id="bulk-input" placeholder="What is 2+2? | 4&#10;Capital of Japan? | Tokyo&#10;Who wrote Hamlet? | Shakespeare"></textarea>
+                    <button id="create-cards-btn" class="btn btn-primary">Create Cards</button>
+                </div>
+
+                <!-- URL Input Method -->
+                <div id="url-input-method" class="input-method">
+                    <div class="info-box">
+                        <p><strong>Import from URL</strong> - Paste a link to fetch content from webpages or study guides</p>
+                        <p class="example-text">Works with most text-based pages</p>
+                    </div>
+                    <input type="text" id="url-input" placeholder="https://example.com/study-notes" class="input-field">
+                    <button id="fetch-url-btn" class="btn btn-primary">Import from URL</button>
+                    <div id="url-preview" class="url-preview"></div>
+                    <div id="url-card-input" style="display: none;">
+                        <p class="preview-label">Preview Content:</p>
+                        <textarea id="url-content" class="input-field" rows="8" placeholder="Edit the imported content if needed, then format as: Question | Answer"></textarea>
+                        <button id="save-url-cards-btn" class="btn btn-primary">Create Cards</button>
+                    </div>
+                </div>
+
+                <!-- Image Input Method -->
+                <div id="image-input-method" class="input-method">
+                    <div class="info-box">
+                        <p><strong>Add Image</strong> - Upload images for visual study materials</p>
+                    </div>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                    <button id="upload-btn" class="btn btn-secondary">Choose Image</button>
+                    <div id="image-preview"></div>
+                    <div id="manual-card-input" style="display: none;">
+                        <input type="text" id="question-input" placeholder="Enter question" class="input-field">
+                        <textarea id="answer-input" placeholder="Enter answer" class="input-field"></textarea>
+                        <button id="save-card-btn" class="btn btn-primary">Save Card</button>
+                    </div>
+                </div>
+
+                <div id="creation-feedback" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- Study Section -->
+        <div id="study-section" class="section">
+            <div class="card-container">
+                <div id="no-cards-message" class="empty-state">
+                    <h2>No Cards Yet</h2>
+                    <p>Create some flashcards to get started</p>
+                </div>
+                <div id="study-interface" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                        <span class="progress-text" id="progress-text">0 / 0</span>
+                    </div>
+                    
+                    <div class="flashcard" id="flashcard">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <div class="card-label">Question</div>
+                                <div class="card-content" id="question-content"></div>
+                                <div class="flip-hint">Click to reveal answer</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="card-label">Answer</div>
+                                <div class="card-content" id="answer-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="answer-buttons">
+                        <button class="btn btn-wrong" id="wrong-btn">
+                            Wrong
+                            <span class="keyboard-hint">← or W</span>
+                        </button>
+                        <button class="btn btn-correct" id="correct-btn">
+                            Correct
+                            <span class="keyboard-hint">→ or C</span>
+                        </button>
+                    </div>
+                    <div class="keyboard-shortcuts">
+                        <span>Press <kbd>Space</kbd> to flip card</span>
+                    </div>
+
+                    <div class="study-stats">
+                        <div class="stat">
+                            <span class="stat-label">Correct</span>
+                            <span class="stat-value correct-value" id="correct-count">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Wrong</span>
+                            <span class="stat-value wrong-value" id="wrong-count">0</span>
+                        </div>
+                        <div class="stat stat-highlight">
+                            <span class="stat-label">Streak</span>
+                            <span class="stat-value streak-value" id="streak-count">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Remaining</span>
+                            <span class="stat-value" id="remaining-count">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Mistakes Section -->
+        <div id="review-section" class="section">
+            <div class="card-container">
+                <h2>Review Mistakes</h2>
+                <div id="no-mistakes-message" class="empty-state">
+                    <h2>Nothing to Review</h2>
+                    <p>You're all caught up</p>
+                </div>
+                <div id="review-interface" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="review-progress-fill"></div>
+                        <span class="progress-text" id="review-progress-text">0 / 0</span>
+                    </div>
+                    
+                    <div class="flashcard" id="review-flashcard">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <div class="card-label">Question</div>
+                                <div class="card-content" id="review-question-content"></div>
+                                <div class="flip-hint">Click to reveal answer</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="card-label">Answer</div>
+                                <div class="card-content" id="review-answer-content"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="answer-buttons">
+                        <button class="btn btn-wrong" id="review-wrong-btn">
+                            Still Wrong
+                            <span class="keyboard-hint">← or W</span>
+                        </button>
+                        <button class="btn btn-correct" id="review-correct-btn">
+                            Got It
+                            <span class="keyboard-hint">→ or C</span>
+                        </button>
+                    </div>
+                    <div class="keyboard-shortcuts">
+                        <span>Press <kbd>Space</kbd> to flip card</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Library Section -->
+        <div id="library-section" class="section">
+            <div class="card-container">
+                <h2>Library</h2>
+                <div class="library-controls">
+                    <button id="clear-all-btn" class="btn btn-danger">Clear All</button>
+                    <button id="reset-progress-btn" class="btn btn-secondary">Reset Progress</button>
+                </div>
+                <div id="library-list" class="library-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
