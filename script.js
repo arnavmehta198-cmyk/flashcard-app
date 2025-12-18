@@ -20,16 +20,35 @@ class FlashcardApp {
         };
         this.currentTestIndex = 0;
         this.performanceHistory = [];
+        this.decks = { 'default': 'Default Deck' };
+        this.currentDeck = 'all';
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.currentAudio = null;
+        this.testMode = 'multiple-choice';
+        this.writingQueue = [];
+        this.matchingPairs = {};
+        this.selectedMatching = [];
         
         this.init();
     }
 
     init() {
         this.loadFromStorage();
+        this.loadDecks();
         this.setupEventListeners();
+        this.checkForSharedDeck();
+        this.updateDeckSelectors();
         this.renderLibrary();
         this.updateStudyInterface();
         this.updateReviewInterface();
+    }
+
+    loadDecks() {
+        const stored = localStorage.getItem('decks');
+        if (stored) {
+            this.decks = JSON.parse(stored);
+        }
     }
 
     // Storage Methods
@@ -124,6 +143,36 @@ class FlashcardApp {
 
         // AI Generate
         document.getElementById('ai-generate-btn').addEventListener('click', () => this.generateWithAI());
+
+        // Audio Recording
+        document.getElementById('record-audio-btn').addEventListener('click', () => this.startRecording());
+        document.getElementById('stop-recording-btn').addEventListener('click', () => this.stopRecording());
+        document.getElementById('play-audio-btn').addEventListener('click', () => this.playAudio());
+        document.getElementById('playback-speed').addEventListener('change', (e) => this.changePlaybackSpeed(e.target.value));
+
+        // Deck Management
+        document.getElementById('new-deck-btn').addEventListener('click', () => this.createNewDeck());
+        document.getElementById('filter-deck').addEventListener('change', (e) => {
+            this.currentDeck = e.target.value;
+            this.renderLibrary();
+        });
+        document.getElementById('share-deck-btn').addEventListener('click', () => this.shareDeck());
+
+        // Test Mode Selection
+        document.querySelectorAll('.test-mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.testMode = e.target.dataset.mode;
+                document.querySelectorAll('.test-mode-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.updateTestInterface();
+            });
+        });
+
+        // Writing Mode
+        document.getElementById('submit-writing-btn').addEventListener('click', () => this.checkWritingAnswer());
+
+        // Matching Mode
+        document.getElementById('check-matches-btn').addEventListener('click', () => this.checkMatches());
 
         // Study Controls
         const flashcard = document.getElementById('flashcard');
@@ -409,6 +458,8 @@ class FlashcardApp {
         const question = document.getElementById('question-input').value.trim();
         const answer = document.getElementById('answer-input').value.trim();
         const feedback = document.getElementById('creation-feedback');
+        const audioUrl = document.getElementById('audio-url-input').value.trim();
+        const selectedDeck = document.getElementById('deck-select').value;
 
         if (!question || !answer) {
             this.showFeedback(feedback, 'Please enter both question and answer', 'error');
@@ -420,13 +471,15 @@ class FlashcardApp {
             question: question,
             answer: answer,
             image: this.currentImage,
+            audio: this.currentAudio || audioUrl || null,
             type: 'image',
             correctCount: 0,
             wrongCount: 0,
             lastStudied: null,
             nextReview: Date.now(),
             easeFactor: 2.5,
-            interval: 0
+            interval: 0,
+            deck: selectedDeck
         });
 
         this.saveToStorage();
@@ -437,10 +490,13 @@ class FlashcardApp {
         // Reset form
         document.getElementById('question-input').value = '';
         document.getElementById('answer-input').value = '';
+        document.getElementById('audio-url-input').value = '';
         document.getElementById('image-preview').innerHTML = '';
+        document.getElementById('audio-preview').style.display = 'none';
         document.getElementById('manual-card-input').style.display = 'none';
         document.getElementById('image-upload').value = '';
         this.currentImage = null;
+        this.currentAudio = null;
 
         this.showFeedback(feedback, 'Card created successfully', 'success');
     }
@@ -494,6 +550,15 @@ class FlashcardApp {
         }
 
         answerContent.innerHTML = card.answer;
+
+        // Show audio button if card has audio
+        const playAudioBtn = document.getElementById('play-audio-btn');
+        if (card.audio) {
+            this.currentAudio = card.audio;
+            playAudioBtn.style.display = 'inline-block';
+        } else {
+            playAudioBtn.style.display = 'none';
+        }
 
         // Update progress
         const completed = this.flashcards.length - this.studyQueue.length;
@@ -778,14 +843,20 @@ class FlashcardApp {
     renderLibrary() {
         const libraryList = document.getElementById('library-list');
 
-        if (this.flashcards.length === 0) {
+        // Filter by deck if not 'all'
+        const cardsToShow = this.currentDeck === 'all' 
+            ? this.flashcards 
+            : this.flashcards.filter(c => c.deck === this.currentDeck);
+
+        if (cardsToShow.length === 0) {
             libraryList.innerHTML = '<div class="empty-state"><h3>No Cards Yet</h3><p>Create some to see them here</p></div>';
             return;
         }
 
         libraryList.innerHTML = '';
 
-        this.flashcards.forEach((card, index) => {
+        cardsToShow.forEach((card) => {
+            const index = this.flashcards.indexOf(card);
             const cardDiv = document.createElement('div');
             cardDiv.className = 'library-card';
             
@@ -1284,6 +1355,371 @@ class FlashcardApp {
         }
 
         card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
+    }
+
+    // Audio Recording and Playback
+    async startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.mediaRecorder = new MediaRecorder(stream);
+            this.audioChunks = [];
+
+            this.mediaRecorder.ondataavailable = (event) => {
+                this.audioChunks.push(event.data);
+            };
+
+            this.mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                this.currentAudio = audioUrl;
+                
+                const preview = document.getElementById('audio-preview');
+                preview.src = audioUrl;
+                preview.style.display = 'block';
+            };
+
+            this.mediaRecorder.start();
+            document.getElementById('record-audio-btn').style.display = 'none';
+            document.getElementById('stop-recording-btn').style.display = 'inline-block';
+        } catch (error) {
+            alert('Microphone access denied or not available');
+        }
+    }
+
+    stopRecording() {
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            document.getElementById('record-audio-btn').style.display = 'inline-block';
+            document.getElementById('stop-recording-btn').style.display = 'none';
+        }
+    }
+
+    playAudio() {
+        if (this.currentAudio) {
+            const audio = new Audio(this.currentAudio);
+            const speed = parseFloat(document.getElementById('playback-speed').value);
+            audio.playbackRate = speed;
+            audio.play();
+        }
+    }
+
+    changePlaybackSpeed(speed) {
+        // Speed will be applied on next play
+    }
+
+    // Deck Management
+    createNewDeck() {
+        const deckName = prompt('Enter deck name:');
+        if (deckName && deckName.trim()) {
+            const deckId = 'deck_' + Date.now();
+            this.decks[deckId] = deckName.trim();
+            this.updateDeckSelectors();
+            localStorage.setItem('decks', JSON.stringify(this.decks));
+        }
+    }
+
+    updateDeckSelectors() {
+        const deckSelect = document.getElementById('deck-select');
+        const filterDeck = document.getElementById('filter-deck');
+        
+        deckSelect.innerHTML = '';
+        filterDeck.innerHTML = '<option value="all">All Decks</option>';
+        
+        Object.entries(this.decks).forEach(([id, name]) => {
+            const option1 = document.createElement('option');
+            option1.value = id;
+            option1.textContent = name;
+            deckSelect.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = id;
+            option2.textContent = name;
+            filterDeck.appendChild(option2);
+        });
+    }
+
+    shareDeck() {
+        const cards = this.currentDeck === 'all' 
+            ? this.flashcards 
+            : this.flashcards.filter(c => c.deck === this.currentDeck);
+
+        if (cards.length === 0) {
+            alert('No cards to share');
+            return;
+        }
+
+        const shareData = {
+            deckName: this.decks[this.currentDeck] || 'Shared Deck',
+            cards: cards.map(c => ({ question: c.question, answer: c.answer, image: c.image }))
+        };
+
+        const encoded = btoa(JSON.stringify(shareData));
+        const shareUrl = `${window.location.origin}${window.location.pathname}?import=${encoded}`;
+
+        this.showShareModal(shareUrl);
+    }
+
+    showShareModal(url) {
+        const modal = document.createElement('div');
+        modal.className = 'share-modal';
+        modal.innerHTML = `
+            <div class="share-modal-content">
+                <h3>📤 Share Your Deck</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Copy this link to share your flashcard deck:</p>
+                <div class="share-link-box">${url}</div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" id="copy-link-btn">📋 Copy Link</button>
+                    <button class="btn btn-secondary" id="close-modal-btn">Close</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('copy-link-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(url);
+            alert('Link copied to clipboard!');
+        });
+
+        document.getElementById('close-modal-btn').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+    }
+
+    checkForSharedDeck() {
+        const params = new URLSearchParams(window.location.search);
+        const importData = params.get('import');
+        
+        if (importData) {
+            try {
+                const decoded = JSON.parse(atob(importData));
+                if (confirm(`Import "${decoded.deckName}" with ${decoded.cards.length} cards?`)) {
+                    decoded.cards.forEach(card => {
+                        this.flashcards.push({
+                            id: Date.now() + Math.random(),
+                            question: card.question,
+                            answer: card.answer,
+                            image: card.image,
+                            type: card.image ? 'image' : 'text',
+                            correctCount: 0,
+                            wrongCount: 0,
+                            lastStudied: null,
+                            nextReview: Date.now(),
+                            easeFactor: 2.5,
+                            interval: 0,
+                            deck: 'default'
+                        });
+                    });
+                    this.saveToStorage();
+                    this.renderLibrary();
+                    alert('Deck imported successfully!');
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            } catch (error) {
+                console.error('Import failed:', error);
+            }
+        }
+    }
+
+    // Writing Mode
+    updateTestInterface() {
+        const noCardsMsg = document.getElementById('no-test-cards-message');
+        const testInterface = document.getElementById('test-interface');
+        const writingInterface = document.getElementById('writing-interface');
+        const matchingInterface = document.getElementById('matching-interface');
+
+        if (this.flashcards.length === 0) {
+            noCardsMsg.style.display = 'block';
+            testInterface.style.display = 'none';
+            writingInterface.style.display = 'none';
+            matchingInterface.style.display = 'none';
+            return;
+        }
+
+        noCardsMsg.style.display = 'none';
+
+        if (this.testMode === 'multiple-choice') {
+            testInterface.style.display = 'block';
+            writingInterface.style.display = 'none';
+            matchingInterface.style.display = 'none';
+            
+            if (this.testQueue.length === 0) {
+                this.initializeTestQueue();
+            }
+            this.displayTestQuestion();
+            this.updateTestStats();
+        } else if (this.testMode === 'writing') {
+            testInterface.style.display = 'none';
+            writingInterface.style.display = 'block';
+            matchingInterface.style.display = 'none';
+            this.initializeWritingMode();
+        } else if (this.testMode === 'matching') {
+            testInterface.style.display = 'none';
+            writingInterface.style.display = 'none';
+            matchingInterface.style.display = 'block';
+            this.initializeMatchingMode();
+        }
+    }
+
+    initializeWritingMode() {
+        this.writingQueue = this.flashcards.map((card, index) => index);
+        this.shuffleArray(this.writingQueue);
+        this.displayWritingQuestion();
+    }
+
+    displayWritingQuestion() {
+        if (this.writingQueue.length === 0) {
+            document.getElementById('writing-question').innerHTML = '<h3>Writing Test Complete!</h3>';
+            document.getElementById('writing-answer-input').style.display = 'none';
+            document.getElementById('submit-writing-btn').style.display = 'none';
+            return;
+        }
+
+        const cardIndex = this.writingQueue[0];
+        const card = this.flashcards[cardIndex];
+        
+        document.getElementById('writing-question').textContent = card.question;
+        document.getElementById('writing-answer-input').value = '';
+        document.getElementById('writing-answer-input').style.display = 'block';
+        document.getElementById('submit-writing-btn').style.display = 'inline-block';
+        document.getElementById('writing-feedback').style.display = 'none';
+
+        const completed = this.flashcards.length - this.writingQueue.length;
+        const total = this.flashcards.length;
+        const progress = (completed / total) * 100;
+
+        document.getElementById('writing-progress-fill').style.width = `${progress}%`;
+        document.getElementById('writing-progress-text').textContent = `${completed} / ${total}`;
+    }
+
+    checkWritingAnswer() {
+        const userAnswer = document.getElementById('writing-answer-input').value.trim().toLowerCase();
+        const cardIndex = this.writingQueue[0];
+        const correctAnswer = this.flashcards[cardIndex].answer.toLowerCase();
+
+        const feedback = document.getElementById('writing-feedback');
+        feedback.style.display = 'block';
+
+        // Simple similarity check
+        if (userAnswer === correctAnswer) {
+            feedback.className = 'correct';
+            feedback.innerHTML = '<strong>✅ Correct!</strong><br>Perfect match!';
+        } else if (correctAnswer.includes(userAnswer) || userAnswer.includes(correctAnswer)) {
+            feedback.className = 'partial';
+            feedback.innerHTML = `<strong>⚠️ Partially Correct</strong><br>Your answer: ${userAnswer}<br>Correct answer: ${this.flashcards[cardIndex].answer}`;
+        } else {
+            feedback.className = 'wrong';
+            feedback.innerHTML = `<strong>❌ Incorrect</strong><br>Your answer: ${userAnswer}<br>Correct answer: ${this.flashcards[cardIndex].answer}`;
+        }
+
+        this.writingQueue.shift();
+
+        setTimeout(() => {
+            this.displayWritingQuestion();
+        }, 3000);
+    }
+
+    // Matching Mode
+    initializeMatchingMode() {
+        const numPairs = Math.min(6, this.flashcards.length);
+        const selectedCards = this.flashcards.slice(0, numPairs);
+        
+        this.matchingPairs = {};
+        this.selectedMatching = [];
+
+        const questionsContainer = document.getElementById('matching-questions');
+        const answersContainer = document.getElementById('matching-answers');
+        
+        questionsContainer.innerHTML = '';
+        answersContainer.innerHTML = '';
+
+        // Create question items
+        selectedCards.forEach((card, index) => {
+            const qDiv = document.createElement('div');
+            qDiv.className = 'matching-item';
+            qDiv.textContent = card.question;
+            qDiv.dataset.id = 'q' + index;
+            qDiv.addEventListener('click', () => this.selectMatchingItem(qDiv, 'question'));
+            questionsContainer.appendChild(qDiv);
+        });
+
+        // Create shuffled answer items
+        const shuffledCards = [...selectedCards].sort(() => Math.random() - 0.5);
+        shuffledCards.forEach((card, index) => {
+            const aDiv = document.createElement('div');
+            aDiv.className = 'matching-item';
+            aDiv.textContent = card.answer;
+            aDiv.dataset.answer = card.answer;
+            aDiv.dataset.id = 'a' + index;
+            aDiv.addEventListener('click', () => this.selectMatchingItem(aDiv, 'answer'));
+            answersContainer.appendChild(aDiv);
+        });
+
+        document.getElementById('matching-result').style.display = 'none';
+    }
+
+    selectMatchingItem(element, type) {
+        if (element.classList.contains('matched')) return;
+
+        const wasSelected = element.classList.contains('selected');
+        
+        // Deselect previous selection of same type
+        document.querySelectorAll(`.matching-item.selected[data-id^="${type === 'question' ? 'q' : 'a'}"]`)
+            .forEach(el => el.classList.remove('selected'));
+
+        if (!wasSelected) {
+            element.classList.add('selected');
+        }
+
+        // Check if both question and answer are selected
+        const selectedQ = document.querySelector('.matching-item.selected[data-id^="q"]');
+        const selectedA = document.querySelector('.matching-item.selected[data-id^="a"]');
+
+        if (selectedQ && selectedA) {
+            const qIndex = selectedQ.dataset.id.substring(1);
+            this.matchingPairs['q' + qIndex] = selectedA.dataset.answer;
+            
+            selectedQ.classList.remove('selected');
+            selectedA.classList.remove('selected');
+            selectedQ.classList.add('matched');
+            selectedA.classList.add('matched');
+        }
+    }
+
+    checkMatches() {
+        let correct = 0;
+        let total = 0;
+
+        document.querySelectorAll('[data-id^="q"]').forEach(qDiv => {
+            const qIndex = qDiv.dataset.id.substring(1);
+            const qText = qDiv.textContent;
+            const selectedAnswer = this.matchingPairs['q' + qIndex];
+            
+            const card = this.flashcards.find(c => c.question === qText);
+            total++;
+
+            if (card && selectedAnswer === card.answer) {
+                correct++;
+            } else {
+                qDiv.classList.add('wrong-match');
+                setTimeout(() => qDiv.classList.remove('wrong-match'), 600);
+            }
+        });
+
+        const result = document.getElementById('matching-result');
+        result.style.display = 'block';
+        result.className = correct === total ? 'success' : '';
+        result.textContent = `You matched ${correct} out of ${total} correctly!`;
+
+        if (correct === total) {
+            setTimeout(() => {
+                this.initializeMatchingMode();
+            }, 2000);
+        }
     }
 }
 

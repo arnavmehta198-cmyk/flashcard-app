@@ -1086,3 +1086,206 @@ textarea::placeholder, .input-field::placeholder {
     font-size: 0.85rem;
     font-weight: 600;
 }
+
+/* Test Mode Selector */
+.test-mode-selector {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.test-mode-btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.test-mode-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+}
+
+.test-mode-btn.active {
+    background: var(--accent-primary);
+    color: var(--bg-main);
+    border-color: var(--accent-primary);
+}
+
+/* Writing Mode */
+#writing-feedback {
+    padding: 1.5rem;
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+
+#writing-feedback.correct {
+    border-color: var(--success);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+#writing-feedback.partial {
+    border-color: var(--accent-tertiary);
+    background: rgba(236, 72, 153, 0.1);
+}
+
+#writing-feedback.wrong {
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Matching Mode */
+.matching-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.matching-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.matching-item {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    padding: 1.25rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+    font-size: 1rem;
+    text-align: center;
+    user-select: none;
+}
+
+.matching-item:hover {
+    border-color: var(--accent-primary);
+    transform: scale(1.02);
+}
+
+.matching-item.selected {
+    border-color: var(--accent-primary);
+    background: rgba(0, 212, 255, 0.15);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.matching-item.matched {
+    border-color: var(--success);
+    background: rgba(34, 197, 94, 0.15);
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.matching-item.wrong-match {
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.15);
+    animation: shake 0.5s ease;
+}
+
+#matching-result {
+    font-size: 1.3rem;
+    font-weight: 600;
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+#matching-result.success {
+    color: var(--success);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+/* Audio Controls */
+.audio-controls {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.audio-player-controls button {
+    animation: none;
+}
+
+#audio-preview {
+    border-radius: 8px;
+    background: var(--bg-main);
+}
+
+/* Deck Organization */
+.deck-selector {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.deck-organization {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* Share Modal */
+.share-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.share-modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.share-modal-content h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.share-link-box {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    word-break: break-all;
+    color: var(--accent-primary);
+    margin-bottom: 1rem;
+    font-family: monospace;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.modal-buttons button {
+    flex: 1;
+}

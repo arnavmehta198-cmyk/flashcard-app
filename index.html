@@ -93,6 +93,25 @@
                     <div id="manual-card-input" style="display: none;">
                         <input type="text" id="question-input" placeholder="Enter question" class="input-field">
                         <textarea id="answer-input" placeholder="Enter answer" class="input-field"></textarea>
+                        
+                        <div class="audio-controls" style="margin: 1rem 0;">
+                            <label style="display: block; color: var(--text-secondary); margin-bottom: 0.5rem;">🔊 Add Audio (Optional):</label>
+                            <input type="text" id="audio-url-input" placeholder="Paste audio URL or record below" class="input-field">
+                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                <button type="button" id="record-audio-btn" class="btn btn-secondary">🎤 Record Audio</button>
+                                <button type="button" id="stop-recording-btn" class="btn btn-secondary" style="display: none;">⏹ Stop</button>
+                            </div>
+                            <audio id="audio-preview" controls style="width: 100%; margin-top: 0.5rem; display: none;"></audio>
+                        </div>
+
+                        <div class="deck-selector" style="margin: 1rem 0;">
+                            <label style="display: block; color: var(--text-secondary); margin-bottom: 0.5rem;">📁 Deck:</label>
+                            <select id="deck-select" class="input-field">
+                                <option value="default">Default Deck</option>
+                            </select>
+                            <button type="button" id="new-deck-btn" class="btn btn-secondary" style="margin-top: 0.5rem;">+ New Deck</button>
+                        </div>
+
                         <button id="save-card-btn" class="btn btn-primary">Save Card</button>
                     </div>
                 </div>
@@ -137,6 +156,18 @@
                         <span class="progress-text" id="progress-text">0 / 0</span>
                     </div>
                     
+                    <div class="audio-player-controls" style="text-align: center; margin-bottom: 1rem;">
+                        <button id="play-audio-btn" class="btn btn-secondary" style="display: none;">🔊 Play Audio</button>
+                        <select id="playback-speed" style="margin-left: 1rem; padding: 0.5rem; border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border);">
+                            <option value="0.5">0.5x</option>
+                            <option value="0.75">0.75x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.25">1.25x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2x</option>
+                        </select>
+                    </div>
+
                     <div class="flashcard" id="flashcard">
                         <div class="flashcard-inner">
                             <div class="flashcard-front">
@@ -190,10 +221,18 @@
         <!-- Test Mode Section -->
         <div id="test-section" class="section">
             <div class="card-container">
+                <div class="test-mode-selector" style="margin-bottom: 2rem;">
+                    <button class="test-mode-btn active" data-mode="multiple-choice">Multiple Choice</button>
+                    <button class="test-mode-btn" data-mode="writing">Writing Mode</button>
+                    <button class="test-mode-btn" data-mode="matching">Matching</button>
+                </div>
+
                 <div id="no-test-cards-message" class="empty-state">
                     <h2>No Cards Yet</h2>
                     <p>Create some flashcards to start testing</p>
                 </div>
+
+                <!-- Multiple Choice Mode -->
                 <div id="test-interface" style="display: none;">
                     <div class="progress-bar">
                         <div class="progress-fill" id="test-progress-fill"></div>
@@ -221,6 +260,32 @@
                             <span class="stat-value" id="test-accuracy">0%</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Writing Mode -->
+                <div id="writing-interface" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="writing-progress-fill"></div>
+                        <span class="progress-text" id="writing-progress-text">0 / 0</span>
+                    </div>
+                    
+                    <div class="test-card">
+                        <div class="test-question" id="writing-question">Question will appear here</div>
+                        <textarea id="writing-answer-input" class="input-field" placeholder="Type your answer here..." style="min-height: 120px; margin-top: 1.5rem;"></textarea>
+                        <button id="submit-writing-btn" class="btn btn-primary" style="margin-top: 1rem;">Submit Answer</button>
+                        <div id="writing-feedback" style="margin-top: 1rem; display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Matching Mode -->
+                <div id="matching-interface" style="display: none;">
+                    <h3 style="text-align: center; color: var(--text-primary); margin-bottom: 2rem;">Match the Questions with Answers</h3>
+                    <div class="matching-container">
+                        <div class="matching-column" id="matching-questions"></div>
+                        <div class="matching-column" id="matching-answers"></div>
+                    </div>
+                    <button id="check-matches-btn" class="btn btn-primary" style="margin-top: 2rem; display: block; margin-left: auto; margin-right: auto;">Check Matches</button>
+                    <div id="matching-result" style="margin-top: 1rem; text-align: center; display: none;"></div>
                 </div>
             </div>
         </div>
@@ -323,6 +388,15 @@
         <div id="library-section" class="section">
             <div class="card-container">
                 <h2>Library</h2>
+                
+                <div class="deck-organization">
+                    <label style="color: var(--text-secondary); margin-right: 1rem;">Filter by Deck:</label>
+                    <select id="filter-deck" class="input-field" style="width: 200px; display: inline-block; margin-right: 1rem;">
+                        <option value="all">All Decks</option>
+                    </select>
+                    <button id="share-deck-btn" class="btn btn-secondary">📤 Share Deck</button>
+                </div>
+
                 <div class="library-controls">
                     <button id="clear-all-btn" class="btn btn-danger">Clear All</button>
                     <button id="reset-progress-btn" class="btn btn-secondary">Reset Progress</button>
