@@ -6,25 +6,28 @@ A modern, intelligent flashcard application designed for effective studying and 
 
 ## Features
 
-### Card Creation
+### Card Creation & Customization
 - **Text Input** - Paste multiple cards at once using `Question | Answer` format
 - **URL Import** - Import content directly from any webpage
-- **Image Support** - Add images to flashcards for visual learning
+- **Image & GIF Support** - Add images and animated GIFs to flashcards for visual learning
+- **Audio Recording** - Record audio directly or add audio URLs for pronunciation practice
 - **CSV Import/Export** - Import cards from CSV files or export your deck for backup
 - **AI Generation** - Automatically generate flashcards from study notes (Smart text parsing)
+- **Deck Organization** - Group cards into subjects, classes, or custom folders
 
-### Study Modes
-- **Flashcard Mode** - Interactive flip cards with smooth slide animations
-- **Test Mode** - Multiple choice questions with instant feedback
-- **Randomized Question Order** - Questions are shuffled for better learning
-- Self-assessment system with correct/wrong tracking
+### Study Modes & Techniques
+- **Flashcard Mode** - Traditional flip-through review with smooth slide animations
+- **Multiple Choice Test** - Quiz yourself with automatically generated options
+- **Writing Mode** - Type out answers to test recall without hints
+- **Matching Game** - Match questions with answers in an interactive game format
+- **Audio Playback** - Listen to pronunciation with adjustable speeds (0.5x - 2x) for language learning
+- **Spaced Repetition** - SM-2 algorithm shows difficult cards more often for optimal retention
+- **Randomized Order** - Questions are shuffled for better learning
 - **Visual Feedback** - Instant color-coded feedback and smooth transitions
 - **Streak Tracking** - Track your current streak and best streak
-- Real-time progress bar with animated shine effect
-- Comprehensive session statistics with accuracy percentage
 - **Keyboard Shortcuts** - Space to flip, Arrow keys or C/W for correct/wrong
 - **Confetti Celebration** - Earn confetti for 90%+ accuracy
-- **Spaced Repetition** - SM-2 algorithm for optimal learning intervals
+- **Offline Access** - Study without internet connection (uses local storage)
 
 ### Review System
 - **Automatic mistake tracking**
@@ -39,18 +42,21 @@ A modern, intelligent flashcard application designed for effective studying and 
 - Resume exactly where you left off
 - No re-entry of existing cards needed
 
-### Stats & Analytics
-- **Progress Dashboard** - Visual statistics and performance metrics
-- **Performance Charts** - Track correct vs wrong answers over time
-- **Difficulty Distribution** - See which cards need more practice
-- **Study Streaks** - Monitor your consistency
+### Tracking & Sharing
+- **Progress Dashboard** - Monitor scores, speed, and performance metrics
+- **Performance Charts** - Visual graphs showing correct vs wrong answers
+- **Difficulty Distribution** - See which cards need more practice (Easy/Medium/Hard)
+- **Study Streaks** - Monitor your consistency and best streaks
 - **Mastery Tracking** - Track cards you've mastered vs need review
+- **Shareable Decks** - Generate links to share your flashcard sets with friends or students
+- **Deck Import** - Import shared decks from other users via URL
 
 ### Library Management
-- Complete card overview
-- Individual card statistics (correct/wrong counts, last studied)
+- Complete card overview with deck filtering
+- Individual card statistics (correct/wrong counts, last studied, difficulty)
+- Organize cards by subject, class, or custom folders
 - Delete cards or reset progress as needed
-- Export your entire deck to CSV for backup
+- Export entire deck or specific folders to CSV for backup
 
 ## Usage
 
@@ -75,12 +81,23 @@ A modern, intelligent flashcard application designed for effective studying and 
 - **→ or C** - Mark as correct
 - **← or W** - Mark as wrong
 
+## Advanced Features
+
+- **Adaptive Learning** - Spaced repetition algorithm adapts to your performance
+- **Visual Learning** - Graphs, charts, and animations throughout the interface
+- **Audio Recording** - Built-in microphone recording with Web Audio API
+- **Multiple Test Formats** - Choose from multiple choice, writing, or matching games
+- **Smart Import** - Import from CSV, URLs, or shared links
+- **Deck Organization** - Group and filter cards by subject or difficulty
+
 ## Technical Details
 
-- Pure HTML, CSS, JavaScript (no dependencies)
-- localStorage for data persistence
-- Responsive design
-- Offline-capable
+- Pure HTML, CSS, JavaScript (no external dependencies)
+- localStorage for data persistence and offline access
+- Web Audio API for recording and playback
+- Canvas API for performance charts
+- Responsive design for mobile, tablet, and desktop
+- Fully offline-capable Progressive Web App
 
 ## Browser Support
 
